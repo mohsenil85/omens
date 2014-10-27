@@ -1,0 +1,7 @@
+* Omens 
+
+** Usage
+
+** Dependencies
+
+** Installation
