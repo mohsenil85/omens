@@ -5,6 +5,7 @@
         :cl-charms)
   (:export :write-at-point
            :with-color
+           :clear-screen
            :with-init
            :+red+
            :+blue+
@@ -56,7 +57,10 @@
 (defun norm (num limit)
    (mod  num (- limit 1)))
 
-
+(defun clear-screen ()
+  (loop :for i :below *width* :do
+        (loop :for j :below *height* :do
+              (write-at-point #\Space i j))))
 
 (defun ensure-screen-size ()
   (multiple-value-bind (width height)
