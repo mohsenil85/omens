@@ -50,7 +50,7 @@
 (defparameter *width*  nil)
 (defparameter *height* nil)
 
-(defstruct screen input output next)
+(defstruct screen input output next boxed)
 
 (defmacro with-color (color &body body)
   `(progn
@@ -61,13 +61,13 @@
 (defun write-at-point (s x y &optional (color +white+))
   "write sting or char at point with a color"
   (with-color color
-              (with-restored-cursor *standard-window*
-                                    (multiple-value-bind (w h)
-                                      (window-dimensions *standard-window*)
-                                      (write-string-at-point *standard-window* 
-                                                             (format nil "~A" s) 
-                                                             (norm x w)
-                                                             (norm y ))))))
+    (with-restored-cursor *standard-window*
+      (multiple-value-bind (w h)
+        (window-dimensions *standard-window*)
+        (write-string-at-point *standard-window* 
+                               (format nil "~A" s) 
+                               (norm x w)
+                               (norm y h ))))))
 
 
 (defun norm (num limit)
@@ -95,26 +95,24 @@
 
 (defmacro with-init (&body body)
   `(with-curses ()
-                 (disable-echoing)
-                 (cl-charms/low-level:curs-set 0)
-                 (enable-raw-input :interpret-control-characters t)
-                 (enable-non-blocking-mode *standard-window*)
-                 (set-width-and-height)
-                 (color-init)
-                 ,@body))
+     (disable-echoing)
+     (cl-charms/low-level:curs-set 0)
+     (enable-raw-input :interpret-control-characters t)
+     (enable-non-blocking-mode *standard-window*)
+     (set-width-and-height)
+     (color-init)
+     (ensure-screen-size)
+     ,@body))
 
-
-
-
-
-(defmacro defscreen (screen-name &key input output next)
+(defmacro defscreen (screen-name &key input output next boxed)
   `(setf (gethash ',screen-name *screens*) 
          (make-screen 
            :input 
            '(let  ((c (get-char *standard-window* :ignore-error t)))
               (case c ,@input))
            :output '(progn ,@output)
-           :next '(gethash ,next *screens*))))
+           :next '(gethash ,next *screens*)
+           :boxed ,boxed)))
 
 (defun run-screen (screen)
   (if screen
@@ -124,9 +122,41 @@
                  :do
                  (refresh-window *standard-window*)
                  (sleep *interval*  )
+                 (if (screen-boxed screen) (draw-box))
                  (eval (screen-input screen ))
                  (eval (screen-output screen )))
            (run-screen (eval (screen-next screen))))
     (sb-sys:os-exit 0)))
 
+(defun draw-box ()
+  (loop for i from 1 below *screen-width* do
+        (write-at-point #\u2500  i 0 ))
+  (loop for i from 1 below *screen-width* do
+        (write-at-point #\u2500 i *screen-height*  ))
+  (loop for i from 1 below *screen-height* do
+        (write-at-point #\u2502 *screen-width* i ))
+  (loop for i from 1 below *screen-height* do
+        (write-at-point #\u2502 0 i ))
+  (write-at-point #\u2514 0 *screen-height* )
+  (write-at-point #\u250c 0 0 )
+  (write-at-point #\u2510 *screen-width* 0 )
+  (write-at-point #\u2518 *screen-width* *screen-height* ))
 
+(defun err-screen ()
+  (defscreen err
+             :input (((nil) nil)
+                     (t (sb-sys:os-exit 2)))
+             :output ((write-at-point "Screen to small. Press any key to exit."
+                                      0
+                                      0 
+                                      +red+ ))
+             :boxed nil)
+  (run-screen (gethash 'err *screens*)))
+
+(defun ensure-screen-size ()
+  (multiple-value-bind (width height)
+    (window-dimensions *standard-window* )
+    (if (or 
+          (>= *screen-width* width )
+          (>= *screen-height* height ))
+      (err-screen))))
