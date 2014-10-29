@@ -64,27 +64,27 @@
 (defun write-at-point (s x y &optional (color +white+))
   "write sting or char at point with a color"
   (with-color color
-    (with-restored-cursor *standard-window*
-      (multiple-value-bind (w h)
-        (window-dimensions *standard-window*)
-        (if (characterp s)
-          (write-char-at-point *standard-window* 
-                               s
-                               (norm x w)
-                               (norm y h))
-          (write-string-at-point *standard-window* 
-                                 (format nil "~A" s) 
-                                 (norm x w)
-                                 (norm y h) ))))))
+              (with-restored-cursor *standard-window*
+                                    (multiple-value-bind (w h)
+                                      (window-dimensions *standard-window*)
+                                      (write-string-at-point *standard-window* 
+                                                             (format nil "~A" s) 
+                                                             (norm x w)
+                                                             (norm y ))))))
 
 
 (defun norm (num limit)
   (mod  num (- limit 1)))
 
-(defun clear-screen ()
-  (loop :for i :below *width* :do
+(defmacro grid-each (&body body)
+  `(loop :for i :below *width* :do
         (loop :for j :below *height* :do
-              (write-at-point #\Space i j))))
+              ,@body)))
+
+(macroexpand-1 '(defun clear-screen ()
+  (grid-each 
+    (write-at-point #\Space i j))))
+
 
 (defun ensure-screen-size ()
   (multiple-value-bind (width height)
@@ -102,16 +102,14 @@
 
 
 (defmacro with-init (&body body)
-
   `(with-curses ()
-     ;       (ensure-screen-size)
-     (disable-echoing)
-     (cl-charms/low-level:curs-set 0)
-     (enable-raw-input :interpret-control-characters t)
-     (enable-non-blocking-mode *standard-window*)
-     (set-width-and-height)
-     (color-init)
-     ,@body))
+                 (disable-echoing)
+                 (cl-charms/low-level:curs-set 0)
+                 (enable-raw-input :interpret-control-characters t)
+                 (enable-non-blocking-mode *standard-window*)
+                 (set-width-and-height)
+                 (color-init)
+                 ,@body))
 
 
 
@@ -122,12 +120,8 @@
          (make-screen 
            :input 
            '(let  ((c (get-char *standard-window* :ignore-error t)))
-              (case c
-                ,@input))
-
-           :output '(progn
-                      ,@output)
-
+              (case c ,@input))
+           :output '(progn ,@output)
            :next '(gethash ,next *screens*))))
 
 (defun run-screen (screen)
