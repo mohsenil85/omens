@@ -6,6 +6,7 @@
   (:export :write-at-point
            :with-color
            :clear-screen
+           :quit-screen
            :with-init
            :+red+
            :+blue+
@@ -19,12 +20,8 @@
            :*screen-height*
            :*screens*
            :*running*
-           :*width*
-           ))
-
+           :*width*)) 
 (in-package :omens)
-
-
 
 (defun color-init ()
   (defconstant +white+ 0)
@@ -78,21 +75,16 @@
 
 (defmacro grid-each (&body body)
   `(loop :for i :below *width* :do
-        (loop :for j :below *height* :do
-              ,@body)))
+         (loop :for j :below *height* :do
+               ,@body)))
 
-(macroexpand-1 '(defun clear-screen ()
+(defun clear-screen ()
   (grid-each 
-    (write-at-point #\Space i j))))
+    (write-at-point #\Space i j)))
 
+(defun quit-screen ()
+  (setf *running* nil))
 
-(defun ensure-screen-size ()
-  (multiple-value-bind (width height)
-    (window-dimensions *standard-window* )
-    (assert 
-      (and 
-        (<= *screen-width* width )
-        (<= *screen-height* height )))))
 
 (defun set-width-and-height ()
   (multiple-value-bind (width height)
