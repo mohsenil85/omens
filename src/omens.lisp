@@ -8,6 +8,7 @@
            :clear-screen
            :quit-screen
            :with-init
+           :+white+
            :+red+
            :+blue+
            :+green+
@@ -50,7 +51,7 @@
 (defparameter *width*  nil)
 (defparameter *height* nil)
 
-(defstruct screen input output next boxed)
+(defstruct screen input output next boxed before)
 
 (defmacro with-color (color &body body)
   `(progn
@@ -104,9 +105,10 @@
      (ensure-screen-size)
      ,@body))
 
-(defmacro defscreen (screen-name &key input output next boxed)
+(defmacro defscreen (screen-name &key input output next boxed before)
   `(setf (gethash ',screen-name *screens*) 
          (make-screen 
+           :before '(progn ,@before)
            :input 
            '(let  ((c (get-char *standard-window* :ignore-error t)))
               (case c ,@input))
@@ -118,6 +120,7 @@
   (if screen
     (progn (clear-screen)
            (setf *running* t)
+           (eval (screen-before screen))
            (loop :while *running*
                  :do
                  (refresh-window *standard-window*)
