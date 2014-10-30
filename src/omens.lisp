@@ -21,7 +21,9 @@
            :*screen-height*
            :*screens*
            :*running*
-           :*width*)) 
+           :*width*
+           :*height*)) 
+
 (in-package :omens)
 
 (defun color-init ()
@@ -133,13 +135,11 @@
 
 (defun draw-box ()
   (loop for i from 1 below *screen-width* do
-        (write-at-point #\u2500  i 0 ))
-  (loop for i from 1 below *screen-width* do
-        (write-at-point #\u2500 i *screen-height*  ))
+        (write-at-point #\u2500 i *screen-height*)
+        (write-at-point #\u2500 i 0 ))
   (loop for i from 1 below *screen-height* do
+        (write-at-point #\u2502 0 i ) 
         (write-at-point #\u2502 *screen-width* i ))
-  (loop for i from 1 below *screen-height* do
-        (write-at-point #\u2502 0 i ))
   (write-at-point #\u2514 0 *screen-height* )
   (write-at-point #\u250c 0 0 )
   (write-at-point #\u2510 *screen-width* 0 )
