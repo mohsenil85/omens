@@ -46,7 +46,7 @@
 (defparameter *screen-width* 120)
 (defparameter *screen-height* 30)
 
-(defparameter *interval* .01)
+(defparameter *interval* .001)
 (defparameter *running* nil)
 (defparameter *screens* (make-hash-table))
 
