@@ -13,8 +13,12 @@
   :license ""
   :depends-on (:cl-charms)
   :components ((:module "src"
-                :components
-                ((:file "omens"))))
+                :serial t
+                :components 
+                ((:file "package")
+                 (:file "screen" :depends-on ("package"))
+                 (:file "omens" :depends-on ("package"))
+                 )))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames
