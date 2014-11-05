@@ -137,3 +137,10 @@
           (>= *screen-width* width )
           (>= *screen-height* height ))
       (err-screen))))
+
+
+(defun write-at-center (msg &optional (color +white+))
+  (write-at-point msg
+                  (floor (/ (- *screen-width* (length msg)) 2))
+                  (floor (/ *screen-height* 2))
+                  color))

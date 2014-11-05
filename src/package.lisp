@@ -22,6 +22,8 @@
            :*screens*
            :*running*
            :*width*
-           :*height*)) 
+           :*height*
+           :write-at-center
+           )) 
 
 (in-package :omens)

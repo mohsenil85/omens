@@ -16,8 +16,8 @@
                 :serial t
                 :components 
                 ((:file "package")
-                 (:file "screen" :depends-on ("package"))
                  (:file "omens" :depends-on ("package"))
+                 (:file "screen" :depends-on ("package"))
                  )))
   :description ""
   :long-description
